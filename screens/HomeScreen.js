@@ -40,11 +40,12 @@ class HomeScreen extends React.Component {
       partialResults: [],
       isTyping: false,
       menuVisible: false,
-      sound : true,
+      sound: true,
     }
   }
   componentDidMount() {
     Tts.setDefaultLanguage('id-ID');
+    Tts.setDefaultRate(0.6);
     Voice.onSpeechStart = this.onSpeechStart;
     Voice.onSpeechRecognized = this.onSpeechRecognized;
     Voice.onSpeechEnd = this.onSpeechEnd;
@@ -52,6 +53,27 @@ class HomeScreen extends React.Component {
     Voice.onSpeechResults = this.onSpeechResults;
     Voice.onSpeechPartialResults = this.onSpeechPartialResults;
     Voice.onSpeechVolumeChanged = this.onSpeechVolumeChanged;
+    let message = "Halo. Perkenalkan saya adalah Bible Man. Seorang yang memiliki pengetahuan Alkitab dan siap membantu pertanyaan Anda dengan wawasan kristen dari Alkitab. Silahkan bertanya di dalam bahasa Indonesia...  "
+    const chatMessage = [
+      {
+        _id: Math.random().toString(36).substring(7),
+        text: message,
+        createdAt: new Date(),
+        user: {
+          _id: 2,
+          name: 'Bible Man',
+          avatar: require('../assets/chatgpt.jpg'),
+        },
+      },
+    ];
+     this.setState(previousState => ({
+      messages: GiftedChat.append(previousState.messages, chatMessage),
+    }))
+    
+    if (this.state.sound) {
+      Tts.speak(chatMessage[0].text);
+      console.log("Speak !")
+    }
   }
   onSpeechStart = (e) => {
     console.log('onSpeechStart: ', e);
@@ -176,9 +198,9 @@ class HomeScreen extends React.Component {
       const systemMessage = { role: 'system', content: 'Kamu adalah Bible Man. Segala respon dan pengetahuanmu harus didasarkan pada Alkitab. Gunakan bahasa yang ramah dan alkitabiah' };
       const data = {
         max_tokens: 2000,
-        temperature:0.7,
+        temperature: 0.7,
         model: 'gpt-3.5-turbo',
-        messages: [systemMessage,...this.state.userMessages, userMessage],
+        messages: [systemMessage, ...this.state.userMessages, userMessage],
       };
       const headers = {
         'Content-Type': 'application/json',
@@ -234,13 +256,12 @@ class HomeScreen extends React.Component {
     this.setState(previousState => ({
       messages: GiftedChat.append(previousState.messages, chatMessage),
     }))
-    let responsefilter = response.replaceAll(/Allah/g, "Al lah").replaceAll(/(\d+):(\d+)/g, "pasal $1 ayat $2")
-    if(this.state.sound)
-    {
+    let responsefilter = response.replaceAll(/Allah/g, "Al lah").replaceAll(/(\d+):(\d+)-(\d+)/g, "pasal $1 ayat ke $2 sampai ayat ke $3").replaceAll(/(\d+):(\d+)/g, "pasal $1 ayat $2")
+    if (this.state.sound) {
       Tts.speak(responsefilter);
       console.log("Speak !")
     }
-    
+
   };
 
   render() {
@@ -283,9 +304,9 @@ class HomeScreen extends React.Component {
                         name='volume-up-outline'
                       />}
                       title='Sound On'
-                      onPress={()=>{
+                      onPress={() => {
                         Alert.alert("Sound On", "Suara Bible Man dinyalakan")
-                        this.setState({sound: true})
+                        this.setState({ sound: true })
                       }}
                     />
                   )}
@@ -299,9 +320,9 @@ class HomeScreen extends React.Component {
                         name='volume-off-outline'
                       />}
                       title='Sound Off'
-                      onPress={()=>{
+                      onPress={() => {
                         Alert.alert("Sound Off", "Suara Bible Man dimatikan")
-                        this.setState({sound: false})
+                        this.setState({ sound: false })
                       }}
                     />
                   )}
